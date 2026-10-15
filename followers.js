@@ -20,7 +20,7 @@
     el('fh-recent-count').textContent=followerTotal===null?'Follower-Zahlen werden nach der Anmeldung geladen.':followerTotal+' Follower · '+rows.length+' gefolgte Kanäle';
     for(const type of ['follow','unfollow']){const button=el('fh-recent-'+type),active=type===recentType;button.classList.toggle('secondary',!active);button.setAttribute('aria-pressed',String(active));}
     const selected=events.filter(e=>e.type===recentType),visible=recentExpanded?selected:selected.slice(0,20);
-    el('fh-recent-events').innerHTML=visible.map(e=>'<div class="fh-event">'+(e.type==='follow'?'♥ ':'💔 ')+esc(e.name)+(e.type==='follow'?' folgt dir':' folgt dir nicht mehr')+'<small>'+(e.type==='follow'?'Gefolgt am ':'Erkannt am ')+esc(new Date(e.at).toLocaleString('de-DE'))+'</small></div>').join('')||'<p class="note">'+(recentType==='follow'?'Noch keine Follower erfasst.':'Noch keine Entfolger auf diesem Gerät erkannt.')+'</p>';
+    el('fh-recent-events').innerHTML=visible.map(e=>'<div class="fh-event">'+(e.type==='follow'?'❤️ ':'💔 ')+esc(e.name)+(e.type==='follow'?' folgt dir':' folgt dir nicht mehr')+'<small>'+(e.type==='follow'?'Gefolgt am ':'Erkannt am ')+esc(new Date(e.at).toLocaleString('de-DE'))+'</small></div>').join('')||'<p class="note">'+(recentType==='follow'?'Noch keine Follower erfasst.':'Noch keine Entfolger auf diesem Gerät erkannt.')+'</p>';
     el('fh-recent-more').hidden=selected.length<=20;el('fh-recent-more').textContent=recentExpanded?'Weniger anzeigen':'Alle anzeigen ('+selected.length+')';
   }
   for(const type of ['follow','unfollow'])el('fh-recent-'+type).onclick=()=>{recentType=type;recentExpanded=false;renderRecent();};
