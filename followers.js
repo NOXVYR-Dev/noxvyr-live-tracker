@@ -19,7 +19,7 @@
   function renderRecent(){
     el('fh-recent-count').textContent=followerTotal===null?'Follower-Zahlen werden nach der Anmeldung geladen.':followerTotal+' Follower · '+rows.length+' gefolgte Kanäle';
     for(const type of ['follow','unfollow']){const button=el('fh-recent-'+type),active=type===recentType;button.classList.toggle('secondary',!active);button.setAttribute('aria-pressed',String(active));}
-    const selected=events.filter(e=>e.type===recentType),visible=recentExpanded?selected:selected.slice(0,20);
+    const selected=mergeHistory(events).filter(e=>e.type===recentType),visible=recentExpanded?selected:selected.slice(0,20);
     el('fh-recent-events').innerHTML=visible.map(e=>'<div class="fh-event">'+(e.type==='follow'?'❤️ ':'💔 ')+'<a class="fh-event-user" target="_blank" rel="noopener noreferrer" href="'+esc('https://www.twitch.tv/'+encodeURIComponent(e.name))+'">'+esc(e.name)+'</a>'+(e.type==='follow'?' folgt dir':' folgt dir nicht mehr')+'<small>'+(e.type==='follow'?'Gefolgt am ':'Erkannt am ')+esc(new Date(e.at).toLocaleString('de-DE'))+'</small></div>').join('')||'<p class="note">'+(recentType==='follow'?'Noch keine Follower erfasst.':'Noch keine Entfolger auf diesem Gerät erkannt.')+'</p>';
     el('fh-recent-more').hidden=selected.length<=20;el('fh-recent-more').textContent=recentExpanded?'Weniger anzeigen':'Alle anzeigen ('+selected.length+')';
   }
@@ -28,7 +28,7 @@
   function render(){renderRecent();const q=el('fh-search').value.trim().toLocaleLowerCase('de'),filter=el('fh-filter').value;el('fh-list').innerHTML=rows.filter(r=>(r.name+' '+r.login).toLocaleLowerCase('de').includes(q)&&(filter==='all'||known&&(filter==='mutual'?r.mutual:!r.mutual))).map(r=>'<div class="fh-row '+(known&&!r.mutual?'fh-oneway':'')+'"><span class="fh-heart" role="img" aria-label="'+(known?(r.mutual?'Folgt zurück':'Folgt nicht zurück'):'Status unbekannt')+'">'+(known?(r.mutual?'❤️':'💔'):'?')+'</span><div class="fh-info"><strong>'+esc(r.name)+'</strong><small>@'+esc(r.login)+'</small></div>'+((known&&!r.mutual)?'<a target="_blank" rel="noopener noreferrer" href="https://www.twitch.tv/'+encodeURIComponent(r.login)+'">Entfolgen ↗</a>':'')+'</div>').join('')||'<p class="note">Keine Kanäle für diese Auswahl.</p>';const count=rows.filter(r=>r.mutual).length;el('fh-summary').textContent=rows.length+' gefolgt'+(known?' · ♥ '+count+' gegenseitig · 💔 '+(rows.length-count)+' einseitig':' · Follower-Status noch unbekannt');}
   let historySyncNote='';
   function readHistory(id){try{return JSON.parse(localStorage.getItem('tlt-followers-'+id)||'null');}catch{return null;}}
-  function mergeHistory(...lists){const map=new Map;for(const list of lists)for(const e of Array.isArray(list)?list:[]){if(!['follow','unfollow'].includes(e?.type)||typeof e.name!=='string'||!Number.isFinite(Date.parse(e.at)))continue;const value={type:e.type,name:e.name,at:new Date(e.at).toISOString()};map.set(JSON.stringify([value.type,value.name.toLowerCase(),value.at]),value);}return [...map.values()].sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)).slice(0,500);}
+  function mergeHistory(...lists){return mergeFollowerHistory(...lists);}
   async function syncHistory(id){
     try{
       const response=await fetch('https://support-max-api.nhyze-nhyze.workers.dev/followers',{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({events:events.slice(0,500)}),signal:AbortSignal.timeout(15000)});
